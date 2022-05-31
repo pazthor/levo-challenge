@@ -10,6 +10,12 @@ Esté proyecto es un api que escucha en los endpoint `api/create/` y `api/update
 El prooyecto se levanto usando Sail, siguiendo la documentación [oficial de Laravel](https://laravel.com/docs/9.x/sail#main-content)
 
 #### Para levantarlo el proyecto
+
+se copia el `.env.example`
+```
+cp .env.example .env
+```
+
 Dentro del repositorio, se escribe el siguiente comando
 ```
 ./vendor/bin/sail up
