@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Domain\Account\Exceptions\CouldNotSubtractMoney;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -43,8 +44,11 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (CouldNotSubtractMoney $exception) {
+                return response()->json([
+                    'error' => 'Entry for '.str_replace('App\\', '', $exception->getMessage())], 404);
+
         });
     }
+
 }
