@@ -29,7 +29,7 @@ class TransactionCountEventQueryTest extends TestCase
         $last24Hours = Carbon::now()->subHours(24)->toDateTimeString();
         $transactionsLast24Hours = new TransactionCountEventQuery(MoneyAdded::class,$last24Hours,$this->account->uuid);
 
-        $this->assertTrue($transactionsLast24Hours->hasExcessiveAddedMoney());
+        $this->assertTrue($transactionsLast24Hours->hasExcessiveAddedMoney(15000));
     }
 
      /** @test */
@@ -65,7 +65,7 @@ class TransactionCountEventQueryTest extends TestCase
         $last24Hours = Carbon::now()->subHours(24)->toDateTimeString();
         $transactionsLast24Hours = new TransactionCountEventQuery(MoneyAdded::class,$last24Hours,$this->account->uuid);
 
-        $this->assertTrue($transactionsLast24Hours->hasExcessiveAddedMoney());
+        $this->assertTrue($transactionsLast24Hours->hasExcessiveAddedMoney(5000));
 
         AccountAggregateRoot::retrieve($this->account->uuid)
         ->deleteAccount()
@@ -98,7 +98,8 @@ class TransactionCountEventQueryTest extends TestCase
         $this->account->refresh();
 
         $transactionsLast24Hours = new TransactionCountEventQuery(MoneyAdded::class,$last24Hours,$this->account->uuid);
-        $this->assertFalse($transactionsLast24Hours->hasExcessiveAddedMoney());
+
+        $this->assertEquals(1,$transactionsLast24Hours->getCountEventsLast24Hours());
 
     }
 }

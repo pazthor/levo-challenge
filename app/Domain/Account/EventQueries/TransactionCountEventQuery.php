@@ -11,6 +11,8 @@ use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 class TransactionCountEventQuery extends EventQuery
 {
     private int $balance = 0;
+    private int $countTransactions = 0;
+
     public function __construct(
         protected string $eventName,
         protected string $minDate,
@@ -29,7 +31,7 @@ class TransactionCountEventQuery extends EventQuery
         ShouldBeStored $moneyAdded
     ) {
         $this->balance += $moneyAdded->amount;
-
+        $this->countTransactions++;
     }
 
     public function hasExcessiveMoneySubtracted(int $amount): bool
@@ -37,15 +39,20 @@ class TransactionCountEventQuery extends EventQuery
         return $this->balance + $amount >= 10000;
     }
 
-    public function hasExcessiveAddedMoney(): bool
+    public function hasExcessiveAddedMoney(int $amount): bool
     {
-        return $this->balance >= 10000;
+        return $this->balance + $amount>= 10000;
     }
 
 
     public function amount(): int
     {
         return $this->balance;
+    }
+
+    public function getCountEventsLast24Hours():int
+    {
+        return $this->countTransactions;
     }
 
 }

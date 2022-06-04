@@ -17,6 +17,7 @@ class TransactionFilterEventQueryTest extends TestCase
     public function it_should_be_get_all_transaction_in_last_48_hours()
     {
         $expectedMessage ="Rejected withdraw because you can not withdraw go above 10,000.";
+        $transactionSuspicious ='Warning, transaction suspicious, added more than 10K USD in less than 24 hours';
         $this->assertDatabaseHas((new Account())->getTable(), [
             'user_id' => $this->user->id,
             'uuid' => $this->account->uuid,
@@ -50,8 +51,9 @@ class TransactionFilterEventQueryTest extends TestCase
         $firstObject =$arrayTransaction[0];
         $secondObject =$arrayTransaction[1];
         $thirdObject =$arrayTransaction[2];
+        $fourthObject =$arrayTransaction[3];
 
-        $this->assertEquals(3, $countEvent );
+        $this->assertEquals(4, $countEvent );
 
 
 
@@ -59,11 +61,17 @@ class TransactionFilterEventQueryTest extends TestCase
         $this->assertEquals(MoneyAdded::class, $firstObject["eventOperation"]);
 
         $this->assertEquals(9000, $secondObject["amount"]);
-        $this->assertEquals(MoneyAdded::class, $secondObject["eventOperation"]);
+        $this->assertEquals(WithdrawExcessiveAmount::class, $secondObject["eventOperation"]);
+        $this->assertEquals($transactionSuspicious, $secondObject["message"]);
 
-        $this->assertEquals(12000, $thirdObject["amount"]);
-        $this->assertEquals(WithdrawExcessiveAmount::class, $thirdObject["eventOperation"]);
-        $this->assertEquals( $expectedMessage, $thirdObject["message"]);
+        $this->assertEquals(9000, $thirdObject["amount"]);
+        $this->assertEquals(MoneyAdded::class, $thirdObject["eventOperation"]);
+
+
+        $this->assertEquals(12000, $fourthObject["amount"]);
+        $this->assertEquals(WithdrawExcessiveAmount::class, $fourthObject["eventOperation"]);
+        $this->assertEquals( $expectedMessage, $fourthObject["message"]);
+
 
 
     }
