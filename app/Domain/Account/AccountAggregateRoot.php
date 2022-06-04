@@ -5,20 +5,23 @@ namespace App\Domain\Account;
 use App\Domain\Account\Events\AccountCreated;
 use App\Domain\Account\Events\AccountDeleted;
 use App\Domain\Account\Events\AccountLimitHit;
+use App\Domain\Account\EventQueries\TransactionCountEventQuery;
+use App\Domain\Account\EventQueries\TransactionFilterEventQuery;
 use App\Domain\Account\Events\MoneyAdded;
 use App\Domain\Account\Events\MoneySubtracted;
 use App\Domain\Account\Events\MoreMoneyNeeded;
 use App\Domain\Account\Events\WithdrawExcessiveAmount;
 use App\Domain\Account\Exceptions\CouldNotSubtractMoney;
+use Carbon\Carbon;
 use Spatie\EventSourcing\AggregateRoots\AggregateRoot;
 
 class AccountAggregateRoot extends AggregateRoot
 {
     protected int $balance = 0;
 
-    protected int $accountLimit = 0;// saldo deudor not saldo negativo
+    protected int $accountLimit = 0;
 
-    protected int $accountUpperLimit = 10000;
+    protected int $limitTransaction = 0;
 
     protected int $accountLimitHitInARow = 0;
 
@@ -46,6 +49,9 @@ class AccountAggregateRoot extends AggregateRoot
 
     public function subtractMoney(int $amount)
     {
+        $last24Hours = Carbon::now()->subHours(24)->toDateTimeString();
+        $transactionEventQuery = new TransactionCountEventQuery(MoneySubtracted::class, $last24Hours,$this->uuid()) ;
+
         if (!$this->hasSufficientFundsToSubtractAmount($amount)) {
             $this->recordThat(new AccountLimitHit());
 
@@ -58,16 +64,16 @@ class AccountAggregateRoot extends AggregateRoot
             throw CouldNotSubtractMoney::notEnoughFunds($amount);
         }
 
-        if ($this->isWithdrawExcessiveAmount($amount)) {
-            $this->recordThat(new WithdrawExcessiveAmount());
+        if ($transactionEventQuery->hasExcessiveMoneySubtracted($amount)) {
+            $this->recordThat(new WithdrawExcessiveAmount($amount));
 
             $this->persist();
-
-            throw CouldNotSubtractMoney::notAllowedWithdrawAmount($amount);
+            return $this;
         }
 
 
         $this->recordThat(new MoneySubtracted($amount));
+        return $this;
     }
 
     public function applyMoneySubtracted(MoneySubtracted $event)
@@ -94,10 +100,7 @@ class AccountAggregateRoot extends AggregateRoot
         return $this->balance - $amount >= $this->accountLimit;
     }
 
-    private function isWithdrawExcessiveAmount(int $amount): bool
-    {
-        return $amount >= $this->accountUpperLimit;
-    }
+
 
     private function needsMoreMoney()
     {

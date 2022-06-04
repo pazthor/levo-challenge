@@ -1,7 +1,9 @@
 <?php
 
-namespace Spatie\EventSourcing\Tests;
+namespace Tests\Domain\Account\EventQueries;
 
+use App\Domain\Account\Events\MoneyAdded;
+use App\Domain\Account\Events\MoneySubtracted;
 use App\Models\Account;
 use App\Domain\Account\AccountAggregateRoot;
 use App\Domain\Account\EventQueries\TransactionCountEventQuery;
@@ -25,9 +27,9 @@ class TransactionCountEventQueryTest extends TestCase
         $this->account->refresh();
 
         $last24Hours = Carbon::now()->subHours(24)->toDateTimeString();
-        $transactionsLast24Hours = new TransactionCountEventQuery($last24Hours,$this->account->uuid);
+        $transactionsLast24Hours = new TransactionCountEventQuery(MoneyAdded::class,$last24Hours,$this->account->uuid);
 
-        $this->assertTrue($transactionsLast24Hours->isExcessiveAmount());
+        $this->assertTrue($transactionsLast24Hours->hasExcessiveAddedMoney());
     }
 
      /** @test */
@@ -61,9 +63,9 @@ class TransactionCountEventQueryTest extends TestCase
         $this->account->refresh();
 
         $last24Hours = Carbon::now()->subHours(24)->toDateTimeString();
-        $transactionsLast24Hours = new TransactionCountEventQuery($last24Hours,$this->account->uuid);
+        $transactionsLast24Hours = new TransactionCountEventQuery(MoneyAdded::class,$last24Hours,$this->account->uuid);
 
-        $this->assertTrue($transactionsLast24Hours->isExcessiveAmount());
+        $this->assertTrue($transactionsLast24Hours->hasExcessiveAddedMoney());
 
         AccountAggregateRoot::retrieve($this->account->uuid)
         ->deleteAccount()
@@ -95,8 +97,8 @@ class TransactionCountEventQueryTest extends TestCase
 
         $this->account->refresh();
 
-        $transactionsLast24Hours = new TransactionCountEventQuery($last24Hours,$this->account->uuid);
-        $this->assertFalse($transactionsLast24Hours->isExcessiveAmount());
+        $transactionsLast24Hours = new TransactionCountEventQuery(MoneyAdded::class,$last24Hours,$this->account->uuid);
+        $this->assertFalse($transactionsLast24Hours->hasExcessiveAddedMoney());
 
     }
 }
