@@ -35,8 +35,19 @@ class AccountAggregateRoot extends AggregateRoot
 
     public function addMoney(int $amount)
     {
-        $this->recordThat(new MoneyAdded($amount));
+        $transactionSuspiciousMessage ='Warning, transaction suspicious, added more than 10K USD in less than 24 hours';
 
+
+        $last24Hours = Carbon::now()->subHours(24)->toDateTimeString();
+        $transactionEventQuery = new TransactionCountEventQuery(MoneyAdded::class, $last24Hours,$this->uuid()) ;
+
+        if ($transactionEventQuery->hasExcessiveAddedMoney($amount)) {
+                $this->recordThat(new WithdrawExcessiveAmount($amount, $transactionSuspiciousMessage));
+
+            $this->persist();
+        }
+
+        $this->recordThat(new MoneyAdded($amount));
         return $this;
     }
 
