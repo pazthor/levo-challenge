@@ -18,7 +18,6 @@ jobs:
           m_max_size: '350'
           l_label: 'size/l'
           l_max_size: '500'
-          github_api_url: 'api.github.com'
-          files_to_ignore: ''
+
 
 
