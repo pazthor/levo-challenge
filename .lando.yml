@@ -1,4 +1,5 @@
 name: my-lando-app
 recipe: laravel
 config:
-  webroot: .
+  webroot: public
+  php: '8.1'
